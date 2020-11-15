@@ -6,7 +6,7 @@ apprise:
 reddit:
   client: xxxxxxxxxx
   secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
-  agent: Reddit Post Notifier
+  agent: reddit-post-notifier (u/xxxxxx)
     
   subreddits:
     gamedeals:
