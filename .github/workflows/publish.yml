@@ -46,8 +46,8 @@ jobs:
       with:
         push: true
         tags: |
-          ghcr.io/${{ github.repository_owner }}/reddit-post-notifier:${{ steps.vars.outputs.tag }}
-          ghcr.io/${{ github.repository_owner }}/reddit-post-notifier:latest
+          ghcr.io/rafhaanshah/reddit-post-notifier:${{ steps.vars.outputs.tag }}
+          ghcr.io/rafhaanshah/reddit-post-notifier:latest
 
     - name: Print image digest
       run: echo ${{ steps.docker_build.outputs.digest }}
