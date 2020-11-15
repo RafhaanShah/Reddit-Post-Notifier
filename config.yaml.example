@@ -1,0 +1,20 @@
+apprise:
+  - discord://webhook_id/webhook_token
+  - join://apikey/device
+  - slack://TokenA/TokenB/TokenC/
+  
+reddit:
+  client: xxxxxxxxxx
+  secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
+  agent: Reddit Post Notifier
+    
+  subreddits:
+    gamedeals:
+      - 'free'
+      - '100%'
+      - 'cyberpunk'
+
+    buildapcsalesuk:
+      - '3080'
+      - 'ssd'
+      - 'razer'

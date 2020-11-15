@@ -1,0 +1,4 @@
+praw==7.1.0
+prawcore==1.5.0
+apprise==0.8.9
+PyYAML==5.3.1
