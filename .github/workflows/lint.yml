@@ -16,7 +16,7 @@ jobs:
         python-version: [3.9]
 
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}

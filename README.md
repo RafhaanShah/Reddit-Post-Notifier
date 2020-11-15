@@ -14,7 +14,7 @@ If using Python, install the requirements first:
 `pip install -r requirements.txt`
 
 ## Configuration
-The configuration is stored inside a yaml file, you can copy `configuration.yaml.example` into a new file as use that as a base, the following sections are all required:
+The configuration is stored inside a yaml file, you can copy `config.yaml.example` into a new file `config.yaml` use that as a base, the following sections are all required:
 1. Apprise configuration urls as a list, for your chosen providers
 	```
 	apprise:
@@ -38,7 +38,7 @@ The configuration is stored inside a yaml file, you can copy `configuration.yaml
 	```
 
 ### Optional
-- `RPN_CONFIG` environment variable can be used to change the location of the config file, the default is `config.yaml` relative to where `app.py` is, or `app/config.yaml` in the Docker image.
+- `RPN_CONFIG` environment variable can be used to change the location of the config file, the default is `config.yaml` relative to where `app.py` is, `app/config.yaml` in the Docker image.
 - `RPN_LOGGING` environment variable can be set to `TRUE` to enable logging each matched post to the console as well.
 - [Docker-Compose](https://docs.docker.com/compose/) configuration:
 ```

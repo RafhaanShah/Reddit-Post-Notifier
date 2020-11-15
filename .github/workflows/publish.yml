@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Check out repository
+    - name: Checkout repository
       uses: actions/checkout@v2
       
     - name: Set version variable
