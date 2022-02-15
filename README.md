@@ -2,6 +2,8 @@
 
 Get notified for new Reddit posts that match your search criteria.
 
+![](/assets/screenshot.jpg)
+
 ## Prerequisites
 - A [Reddit](https://www.reddit.com/) account
 - Reddit API `client_id` and `client_secret`, see [here](https://github.com/reddit-archive/reddit/wiki/OAuth2-Quick-Start-Example#first-steps) for more detailed instructions
