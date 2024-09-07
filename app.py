@@ -118,7 +118,7 @@ def check_config_file():
 
 def load_config():
     """Load config into memory."""
-    with open(CONFIG_PATH, "r") as config_yaml:
+    with open(CONFIG_PATH, "r", encoding="utf-8") as config_yaml:
         config = None
 
         try:
@@ -127,7 +127,7 @@ def load_config():
         except yaml.YAMLError as exception:
             if hasattr(exception, "problem_mark"):
                 mark = exception.problem_mark # pylint: disable=no-member
-                print("Invalid yaml, line %s column %s" % (mark.line + 1, mark.column + 1))
+                print(f"Invalid yaml, line {mark.line + 1}, column {mark.column + 1}")
 
             sys.exit("Invalid config: failed to parse yaml")
 
