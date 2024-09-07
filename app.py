@@ -68,17 +68,17 @@ def process_submission(submission, subreddits, apprise_client):
     search_terms = subreddits[sub.lower()]
 
     if any(term in title.lower() for term in search_terms):
-        notify(apprise_client, title, submission.id)
+        notify(apprise_client, title, submission.permalink)
         if LOGGING != "FALSE":
             print(datetime.datetime.fromtimestamp(submission.created_utc),
-                  " " + "r/" + sub + ": " + title)
+                  " " + "r/" + sub + ": " + title + "\n" + submission.permalink)
 
 
 def notify(apprise_client, title, submission_id):
     """Send apprise notification."""
     apprise_client.notify(
         title=title,
-        body="https://www.reddit.com/" + submission_id,
+        body="https://www.reddit.com" + submission_id,
     )
 
 
