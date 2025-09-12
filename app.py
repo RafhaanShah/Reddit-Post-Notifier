@@ -53,8 +53,10 @@ def stream_submissions(reddit, subreddits, apprise_client):
         except KeyboardInterrupt:
             sys.exit("\tStopping application, bye bye")
 
-        except (praw.exceptions.PRAWException,
-                prawcore.exceptions.PrawcoreException) as exception:
+        except (
+            praw.exceptions.PRAWException,
+            prawcore.exceptions.PrawcoreException,
+        ) as exception:
             print("Reddit API Error: ")
             print(exception)
             print("Pausing for 30 seconds...")
@@ -126,7 +128,7 @@ def load_config():
 
         except yaml.YAMLError as exception:
             if hasattr(exception, "problem_mark"):
-                mark = exception.problem_mark # pylint: disable=no-member
+                mark = exception.problem_mark # type: ignore # pylint: disable=no-member
                 print(f"Invalid yaml, line {mark.line + 1}, column {mark.column + 1}")
 
             sys.exit("Invalid config: failed to parse yaml")
