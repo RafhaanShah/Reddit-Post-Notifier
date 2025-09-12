@@ -1,4 +1,6 @@
 """Stream new Reddit posts and notify for matching posts."""
+
+import argparse
 import datetime
 import os
 import sys
@@ -8,9 +10,9 @@ import apprise
 import praw
 import prawcore
 import yaml
+from praw.exceptions import PRAWException
+from prawcore.exceptions import PrawcoreException
 
-CONFIG_PATH = os.getenv("RPN_CONFIG", "config.yaml")
-LOGGING = os.getenv("RPN_LOGGING", "FALSE")
 
 YAML_KEY_APPRISE = "apprise"
 YAML_KEY_REDDIT = "reddit"
@@ -22,8 +24,26 @@ YAML_KEY_AGENT = "agent"
 
 def main():
     """Run application."""
+    parser = argparse.ArgumentParser(
+        description="Stream new Reddit posts and notify for matching posts."
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=os.getenv("RPN_CONFIG", ""),
+        help="Path to config file",
+    )
+    parser.add_argument(
+        "--logging",
+        type=str,
+        default=os.getenv("RPN_LOGGING", ""),
+        help="Enable logging (true/false)",
+    )
+
+    args = parser.parse_args()
+
     print("Starting Reddit Post Notifier")
-    config = get_config()
+    config = get_config(args.config)
     apprise_config = config[YAML_KEY_APPRISE]
     reddit_config = config[YAML_KEY_REDDIT]
 
@@ -32,14 +52,14 @@ def main():
     reddit_client = get_reddit_client(
         reddit_config[YAML_KEY_CLIENT],
         reddit_config[YAML_KEY_SECRET],
-        reddit_config[YAML_KEY_AGENT]
+        reddit_config[YAML_KEY_AGENT],
     )
 
     validate_subreddits(reddit_client, subreddits)
-    stream_submissions(reddit_client, subreddits, apprise_client)
+    stream_submissions(reddit_client, subreddits, apprise_client, args.logging)
 
 
-def stream_submissions(reddit, subreddits, apprise_client):
+def stream_submissions(reddit, subreddits, apprise_client, logging):
     """Monitor and process new Reddit submissions in given subreddits."""
     subs = subreddits.keys()
     subs_joined = "+".join(subs)
@@ -47,15 +67,17 @@ def stream_submissions(reddit, subreddits, apprise_client):
 
     while True:
         try:
-            for submission in subreddit.stream.submissions(pause_after=None, skip_existing=True):
-                process_submission(submission, subreddits, apprise_client)
+            for submission in subreddit.stream.submissions(
+                pause_after=None, skip_existing=True
+            ):
+                process_submission(submission, subreddits, apprise_client, logging)
 
         except KeyboardInterrupt:
             sys.exit("\tStopping application, bye bye")
 
         except (
-            praw.exceptions.PRAWException,
-            prawcore.exceptions.PrawcoreException,
+            PRAWException,
+            PrawcoreException,
         ) as exception:
             print("Reddit API Error: ")
             print(exception)
@@ -63,7 +85,7 @@ def stream_submissions(reddit, subreddits, apprise_client):
             time.sleep(30)
 
 
-def process_submission(submission, subreddits, apprise_client):
+def process_submission(submission, subreddits, apprise_client, logging):
     """Notify if given submission matches search."""
     title = submission.title
     sub = submission.subreddit.display_name
@@ -71,9 +93,11 @@ def process_submission(submission, subreddits, apprise_client):
 
     if any(term in title.lower() for term in search_terms):
         notify(apprise_client, title, submission.permalink)
-        if LOGGING != "FALSE":
-            print(datetime.datetime.fromtimestamp(submission.created_utc),
-                  " " + "r/" + sub + ": " + title + "\n" + submission.permalink)
+        if logging.lower() != "false":
+            print(
+                datetime.datetime.fromtimestamp(submission.created_utc),
+                " " + "r/" + sub + ": " + title + "\n" + submission.permalink,
+            )
 
 
 def notify(apprise_client, title, submission_id):
@@ -86,11 +110,7 @@ def notify(apprise_client, title, submission_id):
 
 def get_reddit_client(cid, secret, agent):
     """Return PRAW Reddit instance."""
-    return praw.Reddit(
-        client_id=cid,
-        client_secret=secret,
-        user_agent=agent
-    )
+    return praw.Reddit(client_id=cid, client_secret=secret, user_agent=agent)
 
 
 def get_apprise_client(config):
@@ -103,24 +123,26 @@ def get_apprise_client(config):
     return apprise_client
 
 
-def get_config():
+def get_config(path):
     """Returns application configuration."""
-    check_config_file()
-    config = load_config()
+    check_config_file(path)
+    config = load_config(path)
     return validate_config(config)
 
 
-def check_config_file():
+def check_config_file(path):
     """Check if config file exists."""
-    if not os.path.exists(CONFIG_PATH):
-        sys.exit("Missing config file: " + CONFIG_PATH)
+    config_path = str(path)
+    if not os.path.exists(path):
+        sys.exit(f"Missing config file: {config_path}")
 
-    print("Using config file: " + CONFIG_PATH)
+    print(f"Using config file: {config_path}")
 
 
-def load_config():
+def load_config(path):
     """Load config into memory."""
-    with open(CONFIG_PATH, "r", encoding="utf-8") as config_yaml:
+    config_path = str(path)
+    with open(config_path, "r", encoding="utf-8") as config_yaml:
         config = None
 
         try:
@@ -128,7 +150,7 @@ def load_config():
 
         except yaml.YAMLError as exception:
             if hasattr(exception, "problem_mark"):
-                mark = exception.problem_mark # type: ignore # pylint: disable=no-member
+                mark = exception.problem_mark  # type: ignore # pylint: disable=no-member
                 print(f"Invalid yaml, line {mark.line + 1}, column {mark.column + 1}")
 
             sys.exit("Invalid config: failed to parse yaml")
@@ -155,7 +177,9 @@ def validate_config(config):
     if YAML_KEY_AGENT not in reddit or not isinstance(reddit[YAML_KEY_AGENT], str):
         sys.exit("Invalid config: missing reddit -> agent config")
 
-    if YAML_KEY_SUBREDDITS not in reddit or not isinstance(reddit[YAML_KEY_SUBREDDITS], dict):
+    if YAML_KEY_SUBREDDITS not in reddit or not isinstance(
+        reddit[YAML_KEY_SUBREDDITS], dict
+    ):
         sys.exit("Invalid config: missing reddit -> subreddits config")
 
     if YAML_KEY_APPRISE not in config or not isinstance(config[YAML_KEY_APPRISE], list):
@@ -168,10 +192,10 @@ def validate_config(config):
         current = subs[conf]
 
         if not isinstance(current, list) or not current:
-            sys.exit("Invalid config: \'" + conf + "\' needs a list of search strings")
+            sys.exit("Invalid config: '" + conf + "' needs a list of search strings")
 
         if not all(isinstance(item, str) for item in current):
-            sys.exit("Invalid config: \'" + conf + "\' needs a list of search strings")
+            sys.exit("Invalid config: '" + conf + "' needs a list of search strings")
 
         subs[conf] = [x.lower() for x in current]
         print("\tr/" + conf + ": ", current)
@@ -188,10 +212,9 @@ def validate_subreddits(reddit, subreddits):
             reddit.subreddit(sub).id
 
         except prawcore.exceptions.Redirect:
-            sys.exit("Invalid Subreddit: " + sub)
+            sys.exit(f"Invalid Subreddit: {sub}")
 
-        except (praw.exceptions.PRAWException,
-                prawcore.exceptions.PrawcoreException) as exception:
+        except (PRAWException, PrawcoreException) as exception:
             print("Reddit API Error: ")
             print(exception)
 

@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
     reddit-post-notifier:
         container_name: reddit-post-notifier
