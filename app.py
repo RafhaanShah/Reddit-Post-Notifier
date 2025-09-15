@@ -9,17 +9,9 @@ import time
 import apprise
 import praw
 import prawcore
-import yaml
 from praw.exceptions import PRAWException
 from prawcore.exceptions import PrawcoreException
-
-
-YAML_KEY_APPRISE = "apprise"
-YAML_KEY_REDDIT = "reddit"
-YAML_KEY_SUBREDDITS = "subreddits"
-YAML_KEY_CLIENT = "client"
-YAML_KEY_SECRET = "secret"
-YAML_KEY_AGENT = "agent"
+from config_schema import Config
 
 
 def main():
@@ -43,25 +35,27 @@ def main():
     args = parser.parse_args()
 
     print("Starting Reddit Post Notifier")
-    config = get_config(args.config)
-    apprise_config = config[YAML_KEY_APPRISE]
-    reddit_config = config[YAML_KEY_REDDIT]
-
-    subreddits = reddit_config[YAML_KEY_SUBREDDITS]
-    apprise_client = get_apprise_client(apprise_config)
+    config = Config.from_yaml(args.config)
+    apprise_client = get_apprise_client(config.apprise)
     reddit_client = get_reddit_client(
-        reddit_config[YAML_KEY_CLIENT],
-        reddit_config[YAML_KEY_SECRET],
-        reddit_config[YAML_KEY_AGENT],
+        config.reddit.client,
+        config.reddit.secret,
+        config.reddit.agent,
     )
 
-    validate_subreddits(reddit_client, subreddits)
-    stream_submissions(reddit_client, subreddits, apprise_client, args.logging)
+    validate_subreddits(reddit_client, config.reddit.subreddits)
+    stream_submissions(
+        reddit_client, config.reddit.subreddits, apprise_client, args.logging
+    )
 
 
 def stream_submissions(reddit, subreddits, apprise_client, logging):
     """Monitor and process new Reddit submissions in given subreddits."""
-    subs = subreddits.keys()
+    subs = []
+    for sub_dict in subreddits:
+        for sub_name in sub_dict.keys():
+            subs.append(sub_name)
+            print(f"r/{sub_name}: {sub_dict[sub_name]}")
     subs_joined = "+".join(subs)
     subreddit = reddit.subreddit(subs_joined)
 
@@ -87,17 +81,60 @@ def stream_submissions(reddit, subreddits, apprise_client, logging):
 
 def process_submission(submission, subreddits, apprise_client, logging):
     """Notify if given submission matches search."""
+    post_id = submission.id
     title = submission.title
+    flair = submission.link_flair_text
     sub = submission.subreddit.display_name
-    search_terms = subreddits[sub.lower()]
+    processed = set()
 
-    if any(term in title.lower() for term in search_terms):
-        notify(apprise_client, title, submission.permalink)
-        if logging.lower() != "false":
-            print(
-                datetime.datetime.fromtimestamp(submission.created_utc),
-                " " + "r/" + sub + ": " + title + "\n" + submission.permalink,
-            )
+    for sub_dict in subreddits:
+        for sub_name, config in sub_dict.items():
+            if (
+                sub.lower() == sub_name.lower()
+                and post_id not in processed
+                and matches(config, title, flair)
+            ):
+                processed.add(post_id)
+                notify(apprise_client, title, submission.permalink)
+                if logging.lower() == "true":
+                    print(
+                        datetime.datetime.fromtimestamp(submission.created_utc),
+                        " "
+                        + "r/"
+                        + sub
+                        + ": "
+                        + title
+                        + ", "
+                        + flair
+                        + "\n"
+                        + submission.permalink,
+                    )
+
+
+def matches(config, title, flair):
+    """Return True if the item passes the include/exclude rules."""
+
+    # include title → must match at least one
+    if config.title:
+        if not any(term.lower() in title.lower() for term in config.title):
+            return False
+
+    # exclude title → must NOT match any
+    if config.not_title:
+        if any(term.lower() in title.lower() for term in config.not_title):
+            return False
+
+    # include flair → must match at least one
+    if config.flair and flair:
+        if not any(term.lower() == flair.lower() for term in config.flair):
+            return False
+
+    # exclude flair → must NOT match any
+    if config.not_flair and flair:
+        if any(term.lower() == flair.lower() for term in config.not_flair):
+            return False
+
+    return True
 
 
 def notify(apprise_client, title, submission_id):
@@ -116,107 +153,22 @@ def get_reddit_client(cid, secret, agent):
 def get_apprise_client(config):
     """Return Apprise instance."""
     apprise_client = apprise.Apprise()
-
     for conf in config:
         apprise_client.add(conf)
-
     return apprise_client
-
-
-def get_config(path):
-    """Returns application configuration."""
-    check_config_file(path)
-    config = load_config(path)
-    return validate_config(config)
-
-
-def check_config_file(path):
-    """Check if config file exists."""
-    config_path = str(path)
-    if not os.path.exists(path):
-        sys.exit(f"Missing config file: {config_path}")
-
-    print(f"Using config file: {config_path}")
-
-
-def load_config(path):
-    """Load config into memory."""
-    config_path = str(path)
-    with open(config_path, "r", encoding="utf-8") as config_yaml:
-        config = None
-
-        try:
-            config = yaml.safe_load(config_yaml)
-
-        except yaml.YAMLError as exception:
-            if hasattr(exception, "problem_mark"):
-                mark = exception.problem_mark  # type: ignore # pylint: disable=no-member
-                print(f"Invalid yaml, line {mark.line + 1}, column {mark.column + 1}")
-
-            sys.exit("Invalid config: failed to parse yaml")
-
-        if not config:
-            sys.exit("Invalid config: empty file")
-
-        return config
-
-
-def validate_config(config):
-    """Validate required config keys."""
-    if YAML_KEY_REDDIT not in config or not isinstance(config[YAML_KEY_REDDIT], dict):
-        sys.exit("Invalid config: missing reddit config")
-
-    reddit = config[YAML_KEY_REDDIT]
-
-    if YAML_KEY_CLIENT not in reddit or not isinstance(reddit[YAML_KEY_CLIENT], str):
-        sys.exit("Invalid config: missing reddit -> client config")
-
-    if YAML_KEY_SECRET not in reddit or not isinstance(reddit[YAML_KEY_SECRET], str):
-        sys.exit("Invalid config: missing reddit -> secret config")
-
-    if YAML_KEY_AGENT not in reddit or not isinstance(reddit[YAML_KEY_AGENT], str):
-        sys.exit("Invalid config: missing reddit -> agent config")
-
-    if YAML_KEY_SUBREDDITS not in reddit or not isinstance(
-        reddit[YAML_KEY_SUBREDDITS], dict
-    ):
-        sys.exit("Invalid config: missing reddit -> subreddits config")
-
-    if YAML_KEY_APPRISE not in config or not isinstance(config[YAML_KEY_APPRISE], list):
-        sys.exit("Invalid config: missing apprise config")
-
-    print("Monitoring Reddit for:")
-
-    subs = reddit[YAML_KEY_SUBREDDITS]
-    for conf in subs:
-        current = subs[conf]
-
-        if not isinstance(current, list) or not current:
-            sys.exit("Invalid config: '" + conf + "' needs a list of search strings")
-
-        if not all(isinstance(item, str) for item in current):
-            sys.exit("Invalid config: '" + conf + "' needs a list of search strings")
-
-        subs[conf] = [x.lower() for x in current]
-        print("\tr/" + conf + ": ", current)
-
-    print("")
-    reddit[YAML_KEY_SUBREDDITS] = {k.lower(): v for k, v in subs.items()}
-    return config
 
 
 def validate_subreddits(reddit, subreddits):
     """Validate subreddits."""
-    for sub in subreddits:
-        try:
-            reddit.subreddit(sub).id
-
-        except prawcore.exceptions.Redirect:
-            sys.exit(f"Invalid Subreddit: {sub}")
-
-        except (PRAWException, PrawcoreException) as exception:
-            print("Reddit API Error: ")
-            print(exception)
+    for sub_dict in subreddits:
+        for sub in sub_dict.keys():
+            try:
+                reddit.subreddit(sub).id
+            except prawcore.exceptions.Redirect:
+                sys.exit(f"Invalid Subreddit: {sub}")
+            except (PRAWException, PrawcoreException) as exception:
+                print("Reddit API Error: ")
+                print(exception)
 
 
 if __name__ == "__main__":

@@ -56,14 +56,70 @@ pipreqs --force --ignore .venv
      agent: reddit-post-notifier (u/xxxxxx)
    ```
 
-3. Subreddit configuration with your desired search terms for each subreddit you want to monitor, the following example monitors r/GameDeals for any post that includes the words 'free' OR '100%' in the title (make sure this key appears under the `reddit` key, with [proper indentation](http://www.yamllint.com/), and using [single quotes](https://stackoverflow.com/questions/19109912/yaml-do-i-need-quotes-for-strings-in-yaml) if needed)
+3. Subreddit configuration with your desired filters for each subreddit you want to monitor, make sure this key appears under the `reddit` key, with [proper indentation](http://www.yamllint.com/), and using [single quotes](https://stackoverflow.com/questions/19109912/yaml-do-i-need-quotes-for-strings-in-yaml) if needed. All filters are optional. Filters are additive so if you include 3 filters they ALL must all match for the post to pass. The following options are supported:
+  
+    - `title`: filters posts to those that include ANY of the listed terms in the title (case insensitive)
 
-   ```yaml
-   subreddits:
-     gamedeals:
-       - "free"
-       - "100%"
-   ```
+      ```yaml
+      subreddits:
+        - gamedeals:
+          title:
+            - "free"
+            - "100%"
+      ```
+
+    - `not_title`: filters posts to those that DO NOT include ANY of the listed terms in the title (case insensitive)
+
+      ```yaml
+      subreddits:
+        - hmm:
+          not_title:
+            - "hmm"
+            - "mmh"
+      ```
+
+    - `flair`: filters posts to those that include ANY of the listed terms in the flair (case insensitive)
+
+      ```yaml
+      subreddits:
+        - Catswhoyell:
+          flair:
+          - "Scream Team"
+          - "Human Conversationalist"
+      ```
+
+    - `not_flair`: filters posts to those that DO NOT include ANY of the listed terms in the flair (case insensitive)
+
+      ```yaml
+      subreddits:
+        - ATBGE:
+          not_flair:
+          - "Fashion"
+          - "Decor"
+      ```
+
+    - The following example will match posts in `r/NotARealSub` where all of the following are true:
+      1. The title includes any of: `Hello`, `Hi`
+      2. The title does not include any of `Bye`, `Ciao`
+      3. The flair is any of `Cool Post`,`Good Post`
+      4. The flair is not any of `Boring Post`, `Bad Post`
+
+      ```yaml
+      subreddits:
+        - NotARealSub:
+          title:
+            - "Hello"
+            - "Hi"
+          not_title:
+            - "Bye"
+            - "Ciao"
+          flair:
+            - "Cool Post"
+            - "Good Post"
+          not_flair:
+            - "Boring Post"
+            - "Bad Post"
+      ```
 
 ### Optional
 

@@ -9,12 +9,28 @@ reddit:
   agent: reddit-post-notifier (u/xxxxxx)
     
   subreddits:
-    gamedeals:
-      - 'free'
-      - '100%'
-      - 'cyberpunk'
+  - AskReddit:
+      title:
+        - "who"
+      not_title:
+        - "you"
+        - "ever"
 
-    buildapcsalesuk:
-      - '3080'
-      - 'ssd'
-      - 'razer'
+  - Market76:
+      title:
+        - "W:"
+        - "Want"
+      flair:
+        - "XB trade"
+
+  - AutoNewspaper
+      not_title:
+        - "[Sports]"
+        - "[Business]"
+
+  - coaxedintoasnafu
+      not_title:
+        - "poorly"
+      flair:
+        - "TROPE"
+        - "TREND"

@@ -1,4 +1,4 @@
-FROM python:3.9-alpine
+FROM python:3.13-alpine
 
 LABEL org.opencontainers.image.source https://github.com/RafhaanShah/Reddit-Post-Notifier
 
