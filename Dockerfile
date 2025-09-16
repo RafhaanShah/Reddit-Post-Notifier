@@ -6,7 +6,8 @@ LABEL org.opencontainers.image.source="https://github.com/RafhaanShah/Reddit-Pos
 
 ENV PYTHONUNBUFFERED=1
 
-RUN apk add --no-cache gcc musl-dev python3-dev
+# dependency of requirements.txt
+RUN apk add --no-cache py3-ruamel.yaml
 
 RUN adduser -D python
 
