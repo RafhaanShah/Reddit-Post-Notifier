@@ -3,6 +3,7 @@
 import argparse
 import datetime
 import os
+import re
 import sys
 import time
 
@@ -44,13 +45,12 @@ def main():
     )
 
     validate_subreddits(reddit_client, config.reddit.subreddits)
-    stream_submissions(
-        reddit_client, config.reddit.subreddits, apprise_client, args.logging
-    )
+    stream_submissions(reddit_client, config.reddit, apprise_client, args.logging)
 
 
-def stream_submissions(reddit, subreddits, apprise_client, logging):
+def stream_submissions(reddit, reddit_config, apprise_client, logging):
     """Monitor and process new Reddit submissions in given subreddits."""
+    subreddits = reddit_config.subreddits
     subs = []
     for sub_dict in subreddits:
         for sub_name in sub_dict.keys():
@@ -64,7 +64,7 @@ def stream_submissions(reddit, subreddits, apprise_client, logging):
             for submission in subreddit.stream.submissions(
                 pause_after=None, skip_existing=True
             ):
-                process_submission(submission, subreddits, apprise_client, logging)
+                process_submission(submission, reddit_config, apprise_client, logging)
 
         except KeyboardInterrupt:
             sys.exit("\tStopping application, bye bye")
@@ -79,23 +79,26 @@ def stream_submissions(reddit, subreddits, apprise_client, logging):
             time.sleep(30)
 
 
-def process_submission(submission, subreddits, apprise_client, logging):
+def process_submission(submission, reddit_config, apprise_client, logging):
     """Notify if given submission matches search."""
-    post_id = submission.id
     title = submission.title
     flair = submission.link_flair_text
     sub = submission.subreddit.display_name
-    processed = set()
+    processed = False
 
-    for sub_dict in subreddits:
+    for sub_dict in reddit_config.subreddits:
         for sub_name, config in sub_dict.items():
             if (
                 sub.lower() == sub_name.lower()
-                and post_id not in processed
+                and not processed
                 and matches(config, title, flair)
             ):
-                processed.add(post_id)
-                notify(apprise_client, title, submission.permalink)
+                processed = True
+                notify(
+                    apprise_client,
+                    reddit_config,
+                    submission,
+                )
                 if logging.lower() == "true":
                     print(
                         datetime.datetime.fromtimestamp(submission.created_utc),
@@ -137,11 +140,19 @@ def matches(config, title, flair):
     return True
 
 
-def notify(apprise_client, title, submission_id):
+def notify(apprise_client, reddit_config, submission):
     """Send apprise notification."""
+    mapping = {
+        "TITLE": submission.title,
+        "SUBREDDIT": submission.subreddit.display_name,
+        "URL": "https://www.reddit.com" + submission.permalink,
+        "FLAIR": submission.link_flair_text or "",
+    }
+    title = render_template(reddit_config.notification_title, mapping)
+    body = render_template(reddit_config.notification_body, mapping)
     apprise_client.notify(
         title=title,
-        body="https://www.reddit.com" + submission_id,
+        body=body,
     )
 
 
@@ -169,6 +180,28 @@ def validate_subreddits(reddit, subreddits):
             except (PRAWException, PrawcoreException) as exception:
                 print("Reddit API Error: ")
                 print(exception)
+
+
+def render_template(template: str, mapping: dict) -> str:
+    """
+    Replace placeholders like {VAR} in the template string
+    using the given mapping dict.
+    - Keys in the mapping correspond to placeholders (case-sensitive).
+    - Values can be constants or callables (lambdas/functions).
+    - If a placeholder is not in the mapping, it is left unchanged.
+    """
+
+    def replacer(match):
+        key = match.group(1)
+        value = mapping.get(key)
+        if callable(value):
+            return str(value())
+        if value is not None:
+            return str(value)
+
+        return f"{{{key}}}"  # leave unchanged if not found
+
+    return re.sub(r"\{(\w+)\}", replacer, template)
 
 
 if __name__ == "__main__":

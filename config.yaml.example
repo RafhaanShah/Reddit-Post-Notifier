@@ -7,30 +7,32 @@ reddit:
   client: xxxxxxxxxx
   secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
   agent: reddit-post-notifier (u/xxxxxx)
+  notification_title: "{SUBREDDIT} - {TITLE}"
+  notification_body: "{URL}"
     
   subreddits:
-  - AskReddit:
-      title:
-        - "who"
-      not_title:
-        - "you"
-        - "ever"
+    - AskReddit:
+        title:
+          - "who"
+        not_title:
+          - "you"
+          - "ever"
 
-  - Market76:
-      title:
-        - "W:"
-        - "Want"
-      flair:
-        - "XB trade"
+    - Market76:
+        title:
+          - "W:"
+          - "Want"
+        flair:
+          - "XB trade"
 
-  - AutoNewspaper
-      not_title:
-        - "[Sports]"
-        - "[Business]"
+    - AutoNewspaper:
+        not_title:
+          - "[Sports]"
+          - "[Business]"
 
-  - coaxedintoasnafu
-      not_title:
-        - "poorly"
-      flair:
-        - "TROPE"
-        - "TREND"
+    - coaxedintoasnafu:
+        not_title:
+          - "poorly"
+        flair:
+          - "TROPE"
+          - "TREND"

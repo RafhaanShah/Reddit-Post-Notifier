@@ -47,79 +47,82 @@ pipreqs --force --ignore .venv
      - slack://TokenA/TokenB/TokenC/
    ```
 
-2. Reddit configuration with your [app](https://www.reddit.com/prefs/apps) details, it is also [recommended](https://github.com/reddit-archive/reddit/wiki/API#rules) to put your username in the `agent` field but it can be anything you want
+2. Reddit configuration with your [app](https://www.reddit.com/prefs/apps) details, it is also [recommended](https://github.com/reddit-archive/reddit/wiki/API#rules) to put your username in the `agent` field but it can be anything you want. You can also configure the `notification_title` and `notification_body` with placeholders for details of the post.
 
-   ```yaml
-   reddit:
-     client: xxxxxxxxxx
-     secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
-     agent: reddit-post-notifier (u/xxxxxx)
-   ```
+```yaml
+reddit:
+  client: xxxxxxxxxx
+  secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
+  agent: reddit-post-notifier (u/xxxxxx)
+  notification_title: "{SUBREDDIT} - {TITLE}"
+  notification_body: "{URL}"
+```
 
-3. Subreddit configuration with your desired filters for each subreddit you want to monitor, make sure this key appears under the `reddit` key, with [proper indentation](http://www.yamllint.com/), and using [single quotes](https://stackoverflow.com/questions/19109912/yaml-do-i-need-quotes-for-strings-in-yaml) if needed. All filters are optional. Filters are additive so if you include 3 filters they ALL must all match for the post to pass. The following options are supported:
-  
-    - `title`: filters posts to those that include ANY of the listed terms in the title (case insensitive)
+Available placeholders for notifications are: - `{TITLE}` - `{SUBREDDIT}` - `{URL}` - `{FLAIR}`
 
-      ```yaml
-      subreddits:
-        - gamedeals:
-          title:
-            - "free"
-            - "100%"
-      ```
+1. Subreddit configuration with your desired filters for each subreddit you want to monitor, make sure this key appears under the `reddit` key, with [proper indentation](http://www.yamllint.com/), and using [single quotes](https://stackoverflow.com/questions/19109912/yaml-do-i-need-quotes-for-strings-in-yaml) if needed. All filters are optional. Filters are additive so if you include 3 filters they ALL must all match for the post to pass. The following options are supported:
+   - `title`: filters posts to those that include ANY of the listed terms in the title (case insensitive)
 
-    - `not_title`: filters posts to those that DO NOT include ANY of the listed terms in the title (case insensitive)
+     ```yaml
+     subreddits:
+       - gamedeals:
+         title:
+           - "free"
+           - "100%"
+     ```
 
-      ```yaml
-      subreddits:
-        - hmm:
-          not_title:
-            - "hmm"
-            - "mmh"
-      ```
+   - `not_title`: filters posts to those that DO NOT include ANY of the listed terms in the title (case insensitive)
 
-    - `flair`: filters posts to those that include ANY of the listed terms in the flair (case insensitive)
+     ```yaml
+     subreddits:
+       - hmm:
+         not_title:
+           - "hmm"
+           - "mmh"
+     ```
 
-      ```yaml
-      subreddits:
-        - Catswhoyell:
-          flair:
-          - "Scream Team"
-          - "Human Conversationalist"
-      ```
+   - `flair`: filters posts to those that include ANY of the listed terms in the flair (case insensitive)
 
-    - `not_flair`: filters posts to those that DO NOT include ANY of the listed terms in the flair (case insensitive)
+     ```yaml
+     subreddits:
+       - Catswhoyell:
+         flair:
+           - "Scream Team"
+           - "Human Conversationalist"
+     ```
 
-      ```yaml
-      subreddits:
-        - ATBGE:
-          not_flair:
-          - "Fashion"
-          - "Decor"
-      ```
+   - `not_flair`: filters posts to those that DO NOT include ANY of the listed terms in the flair (case insensitive)
 
-    - The following example will match posts in `r/NotARealSub` where all of the following are true:
-      1. The title includes any of: `Hello`, `Hi`
-      2. The title does not include any of `Bye`, `Ciao`
-      3. The flair is any of `Cool Post`,`Good Post`
-      4. The flair is not any of `Boring Post`, `Bad Post`
+     ```yaml
+     subreddits:
+       - ATBGE:
+         not_flair:
+           - "Fashion"
+           - "Decor"
+     ```
 
-      ```yaml
-      subreddits:
-        - NotARealSub:
-          title:
-            - "Hello"
-            - "Hi"
-          not_title:
-            - "Bye"
-            - "Ciao"
-          flair:
-            - "Cool Post"
-            - "Good Post"
-          not_flair:
-            - "Boring Post"
-            - "Bad Post"
-      ```
+   - The following example will match posts in `r/NotARealSub` where all of the following are true:
+     1. The title includes any of: `Hello`, `Hi`
+     2. The title does not include any of `Bye`, `Ciao`
+     3. The flair is any of `Cool Post`,`Good Post`
+     4. The flair is not any of `Boring Post`, `Bad Post`
+
+     ```yaml
+     subreddits:
+       - NotARealSub:
+         title:
+           - "Hello"
+           - "Hi"
+         not_title:
+           - "Bye"
+           - "Ciao"
+         flair:
+           - "Cool Post"
+           - "Good Post"
+         not_flair:
+           - "Boring Post"
+           - "Bad Post"
+     ```
 
 ### Optional
 
