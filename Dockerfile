@@ -4,7 +4,7 @@ LABEL org.opencontainers.image.source="https://github.com/RafhaanShah/Reddit-Pos
 
 ENV PYTHONUNBUFFERED=1
 
-RUN adduser -D python
+RUN useradd -r -m python
 USER python
 
 WORKDIR /app
@@ -12,6 +12,6 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY app.py .
+COPY . .
 
 ENTRYPOINT ["python", "app.py"]

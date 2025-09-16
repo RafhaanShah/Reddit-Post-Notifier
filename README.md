@@ -47,7 +47,7 @@ pipreqs --force --ignore .venv
      - slack://TokenA/TokenB/TokenC/
    ```
 
-1. Reddit configuration with your [app](https://www.reddit.com/prefs/apps) details, it is also [recommended](https://github.com/reddit-archive/reddit/wiki/API#rules) to put your username in the `agent` field but it can be anything you want. You can also configure the `notification_title` and `notification_body` with placeholders for details of the post. Available placeholders for notifications are: - `{TITLE}` - `{SUBREDDIT}` - `{URL}` - `{FLAIR}`
+1. Reddit configuration with your [app](https://www.reddit.com/prefs/apps) details, it is also [recommended](https://github.com/reddit-archive/reddit/wiki/API#rules) to put your username in the `agent` field but it can be anything you want. You can also configure the `notification_title` and `notification_body` with placeholders for details of the post. Available placeholders for notifications are: `{TITLE}`, `{SUBREDDIT}`, `{URL}`, `{FLAIR}`
 
    ```yaml
    reddit:
@@ -129,8 +129,8 @@ pipreqs --force --ignore .venv
 
 ## Usage
 
-- Python: `python app.py`
-- Executable: `./rpn`
+- Python: `python app.py --config config.yaml`
+- Executable: `./rpn --config config.yaml`
 - Docker:
   `docker run -v /path/to/your/config.yaml:/app/config.yaml ghcr.io/rafhaanshah/reddit-post-notifier:latest`
 - Docker-Compose:

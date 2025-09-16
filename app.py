@@ -23,13 +23,13 @@ def main():
     parser.add_argument(
         "--config",
         type=str,
-        default=os.getenv("RPN_CONFIG", ""),
+        default=os.getenv("RPN_CONFIG", "config.yaml"),
         help="Path to config file",
     )
     parser.add_argument(
         "--logging",
         type=str,
-        default=os.getenv("RPN_LOGGING", ""),
+        default=os.getenv("RPN_LOGGING", "false"),
         help="Enable logging (true/false)",
     )
 
