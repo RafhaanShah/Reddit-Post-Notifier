@@ -1,8 +1,8 @@
-FROM python:3.13-alpine
+FROM python:3.13-slim
 
-LABEL org.opencontainers.image.source https://github.com/RafhaanShah/Reddit-Post-Notifier
+LABEL org.opencontainers.image.source="https://github.com/RafhaanShah/Reddit-Post-Notifier"
 
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONUNBUFFERED=1
 
 RUN adduser -D python
 USER python
