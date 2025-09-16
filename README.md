@@ -47,21 +47,19 @@ pipreqs --force --ignore .venv
      - slack://TokenA/TokenB/TokenC/
    ```
 
-2. Reddit configuration with your [app](https://www.reddit.com/prefs/apps) details, it is also [recommended](https://github.com/reddit-archive/reddit/wiki/API#rules) to put your username in the `agent` field but it can be anything you want. You can also configure the `notification_title` and `notification_body` with placeholders for details of the post.
+1. Reddit configuration with your [app](https://www.reddit.com/prefs/apps) details, it is also [recommended](https://github.com/reddit-archive/reddit/wiki/API#rules) to put your username in the `agent` field but it can be anything you want. You can also configure the `notification_title` and `notification_body` with placeholders for details of the post. Available placeholders for notifications are: - `{TITLE}` - `{SUBREDDIT}` - `{URL}` - `{FLAIR}`
 
-```yaml
-reddit:
-  client: xxxxxxxxxx
-  secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
-  agent: reddit-post-notifier (u/xxxxxx)
-  notification_title: "{SUBREDDIT} - {TITLE}"
-  notification_body: "{URL}"
-```
-
-Available placeholders for notifications are: - `{TITLE}` - `{SUBREDDIT}` - `{URL}` - `{FLAIR}`
+   ```yaml
+   reddit:
+     client: xxxxxxxxxx
+     secret: xxxxxxxxxxxxxxxxxxxx_xxxxxxxxxx
+     agent: reddit-post-notifier (u/xxxxxx)
+     notification_title: "{SUBREDDIT} - {TITLE}"
+     notification_body: "{URL}"
+   ```
 
 1. Subreddit configuration with your desired filters for each subreddit you want to monitor, make sure this key appears under the `reddit` key, with [proper indentation](http://www.yamllint.com/), and using [single quotes](https://stackoverflow.com/questions/19109912/yaml-do-i-need-quotes-for-strings-in-yaml) if needed. All filters are optional. Filters are additive so if you include 3 filters they ALL must all match for the post to pass. The following options are supported:
-   - `title`: filters posts to those that include ANY of the listed terms in the title (case insensitive)
+   - `title`: filters posts to those that DO include ANY of the listed terms in the title (case insensitive)
 
      ```yaml
      subreddits:
@@ -81,7 +79,7 @@ Available placeholders for notifications are: - `{TITLE}` - `{SUBREDDIT}` - `{UR
            - "mmh"
      ```
 
-   - `flair`: filters posts to those that include ANY of the listed terms in the flair (case insensitive)
+   - `flair`: filters posts to those that DO include ANY of the listed terms in the flair (case insensitive)
 
      ```yaml
      subreddits:
