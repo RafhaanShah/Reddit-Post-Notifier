@@ -14,6 +14,8 @@ from praw.exceptions import PRAWException
 from prawcore.exceptions import PrawcoreException
 from config_schema import Config
 
+from fifo import FIFOSet
+
 
 def main():
     """Run application."""
@@ -45,10 +47,14 @@ def main():
     )
 
     validate_subreddits(reddit_client, config.reddit.subreddits)
-    stream_submissions(reddit_client, config.reddit, apprise_client, args.logging)
+
+    submission_ids = FIFOSet(max_size=10000)
+    stream_submissions(
+        reddit_client, config.reddit, apprise_client, args.logging, submission_ids
+    )
 
 
-def stream_submissions(reddit, reddit_config, apprise_client, logging):
+def stream_submissions(reddit, reddit_config, apprise_client, logging, submission_ids):
     """Monitor and process new Reddit submissions in given subreddits."""
     subreddits = reddit_config.subreddits
     subs = []
@@ -64,6 +70,11 @@ def stream_submissions(reddit, reddit_config, apprise_client, logging):
             for submission in subreddit.stream.submissions(
                 pause_after=None, skip_existing=True
             ):
+                if submission is None:
+                    continue
+                if submission.id in submission_ids:
+                    continue
+                submission_ids.add(submission.id)
                 process_submission(submission, reddit_config, apprise_client, logging)
 
         except KeyboardInterrupt:
@@ -81,10 +92,16 @@ def stream_submissions(reddit, reddit_config, apprise_client, logging):
 
 def process_submission(submission, reddit_config, apprise_client, logging):
     """Notify if given submission matches search."""
+    print_submission(submission)
     title = submission.title
     flair = submission.link_flair_text
     sub = submission.subreddit.display_name
     processed = False
+
+    # Skip if submission is older than 24 hours
+    now = datetime.datetime.now(datetime.timezone.utc).timestamp()
+    if now - submission.created_utc > 86400:
+        return
 
     for sub_dict in reddit_config.subreddits:
         for sub_name, config in sub_dict.items():
@@ -100,18 +117,35 @@ def process_submission(submission, reddit_config, apprise_client, logging):
                     submission,
                 )
                 if logging.lower() == "true":
-                    print(
-                        datetime.datetime.fromtimestamp(submission.created_utc),
-                        " "
-                        + "r/"
-                        + sub
-                        + ": "
-                        + title
-                        + ", "
-                        + flair
-                        + "\n"
-                        + submission.permalink,
-                    )
+                    print_submission(submission, prefix="MATCH:")
+
+
+def print_submission(submission, prefix=None):
+    """
+    Nicely print a Reddit submission with key fields, handling None values.
+    Format: date: prefix display_name - title, flair, permalink
+    """
+    now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    parts = []
+    display_name = getattr(submission.subreddit, "display_name", None)
+    title = getattr(submission, "title", None)
+    flair = getattr(submission, "link_flair_text", None)
+    permalink = getattr(submission, "permalink", None)
+
+    if display_name:
+        parts.append(str(display_name))
+    if title:
+        parts.append(str(title))
+    if flair:
+        parts.append(str(flair))
+    if permalink:
+        parts.append(f"https://www.reddit.com{permalink}")
+
+    msg = f"{now}: "
+    if prefix:
+        msg += f"{prefix} "
+    msg += " - ".join(parts)
+    print(msg)
 
 
 def matches(config, title, flair):

@@ -1,4 +1,16 @@
+# Ignore everything by default
 *
 
+# Ignore these directories explicitly
+/__pycache__
+/.venv/
+/.vscode
+build/
+dist/
+
+# Allow .py files everywhere (but parent dirs must not be ignored)
+!*/
+
+# Allow Python files and requirements.txt
 !*.py
 !requirements.txt
