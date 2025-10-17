@@ -64,9 +64,9 @@ pipreqs --force --ignore .venv
      ```yaml
      subreddits:
        - gamedeals:
-         title:
-           - "free"
-           - "100%"
+           title:
+             - "free"
+             - "100%"
      ```
 
    - `not_title`: filters posts to those that DO NOT include ANY of the listed terms in the title (case insensitive)
