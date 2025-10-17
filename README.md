@@ -74,9 +74,9 @@ pipreqs --force --ignore .venv
      ```yaml
      subreddits:
        - hmm:
-         not_title:
-           - "hmm"
-           - "mmh"
+           not_title:
+             - "hmm"
+             - "mmh"
      ```
 
    - `flair`: filters posts to those that DO include ANY of the listed terms in the flair (case insensitive)
@@ -84,9 +84,9 @@ pipreqs --force --ignore .venv
      ```yaml
      subreddits:
        - Catswhoyell:
-         flair:
-           - "Scream Team"
-           - "Human Conversationalist"
+           flair:
+             - "Scream Team"
+             - "Human Conversationalist"
      ```
 
    - `not_flair`: filters posts to those that DO NOT include ANY of the listed terms in the flair (case insensitive)
@@ -94,9 +94,9 @@ pipreqs --force --ignore .venv
      ```yaml
      subreddits:
        - ATBGE:
-         not_flair:
-           - "Fashion"
-           - "Decor"
+           not_flair:
+             - "Fashion"
+             - "Decor"
      ```
 
    - The following example will match posts in `r/NotARealSub` where all of the following are true:
@@ -108,18 +108,18 @@ pipreqs --force --ignore .venv
      ```yaml
      subreddits:
        - NotARealSub:
-         title:
-           - "Hello"
-           - "Hi"
-         not_title:
-           - "Bye"
-           - "Ciao"
-         flair:
-           - "Cool Post"
-           - "Good Post"
-         not_flair:
-           - "Boring Post"
-           - "Bad Post"
+            title:
+              - "Hello"
+              - "Hi"
+            not_title:
+              - "Bye"
+              - "Ciao"
+            flair:
+              - "Cool Post"
+              - "Good Post"
+            not_flair:
+              - "Boring Post"
+              - "Bad Post"
      ```
 
 ### Optional
